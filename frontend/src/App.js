@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import "./App.css";
-import JsonViewer from "./components/JsonViewer";
+import ResultCard from "./components/ResultCard";
 
 function App() {
   const [files, setFiles] = useState([]);
@@ -90,10 +90,7 @@ function App() {
       <div className="results-grid">
         {results && results.length > 0 ? (
           results.map((res, idx) => (
-            <div key={idx} className="result-card">
-              <h3>Analysis {idx + 1}</h3>
-              <JsonViewer data={res} />
-            </div>
+            <ResultCard key={idx} result={res} index={idx} />
           ))
         ) : (
           !loading && !error && (
