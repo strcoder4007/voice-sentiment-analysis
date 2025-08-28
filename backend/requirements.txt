@@ -6,3 +6,8 @@ pydantic
 typing-extensions
 httpx
 python-dotenv
+transformers>=4.54.0
+torch
+mistral_common\[audio\]
+accelerate
+librosa
