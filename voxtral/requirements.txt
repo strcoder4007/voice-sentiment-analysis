@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+python-multipart
+openai
+pydantic
+typing-extensions
+httpx
+python-dotenv
+transformers>=4.54.0
+torch
+mistral_common
+accelerate
+librosa

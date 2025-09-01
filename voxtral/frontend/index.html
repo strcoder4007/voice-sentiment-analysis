@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Voxtral - Conversation Analysis</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <h1>Voxtral Analysis</h1>
+    <div class="header-actions">
+      <button id="toggleRawBtn" class="ghost" title="Show/Hide raw JSON">Raw JSON</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="controls card">
+      <div class="control-row">
+        <label class="file-upload">
+          <input type="file" id="audioInput" accept="audio/*" />
+          <span id="fileLabel">Choose audio file…</span>
+        </label>
+        <button id="analyzeBtn" class="primary" disabled>Analyze</button>
+        <button id="loadSampleBtn" class="secondary" title="Load the bundled sample analysis">Load sample</button>
+      </div>
+      <div class="control-row meta">
+        <span id="status" class="status"></span>
+        <span id="backendHint" class="hint">Tip: If a backend is running at POST /api/analyze, the Analyze button will call it. Otherwise we'll load the sample output.</span>
+      </div>
+    </section>
+
+    <nav id="quickNav" class="quick-nav card hidden"></nav>
+
+    <section id="results" class="results hidden">
+      <div id="overview" class="card section"></div>
+      <div id="summary" class="card section"></div>
+      <div id="intentIssues" class="card section"></div>
+      <div id="actions" class="card section"></div>
+      <div id="speakerSentiment" class="card section"></div>
+      <div id="wins" class="card section"></div>
+      <div id="improvements" class="card section"></div>
+      <div id="winBack" class="card section"></div>
+      <div id="objections" class="card section"></div>
+      <div id="commitmentOutcome" class="card section"></div>
+      <div id="recommendations" class="card section"></div>
+      <div id="drafts" class="card section"></div>
+      <div id="notes" class="card section"></div>
+      <div id="knowledgeGaps" class="card section"></div>
+
+      <div id="rawJson" class="card section raw hidden">
+        <div class="section-title">
+          <h2>Raw JSON</h2>
+          <div class="section-actions">
+            <button id="copyJsonBtn" class="ghost small">Copy JSON</button>
+          </div>
+        </div>
+        <pre id="jsonViewer" class="json-viewer"></pre>
+      </div>
+    </section>
+  </main>
+
+  <template id="pillTemplate">
+    <span class="pill"></span>
+  </template>
+
+  <template id="listItemTemplate">
+    <li>
+      <div class="li-main"></div>
+      <div class="li-sub"></div>
+    </li>
+  </template>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
