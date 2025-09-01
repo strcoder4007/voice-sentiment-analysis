@@ -125,6 +125,15 @@ Return ONLY a JSON object with this exact structure and keys (no markdown, no ex
     }
   ],
 
+  "transcript": [
+    {
+      "approx_time": "MM:SS or HH:MM:SS",
+      "speaker_label": "Speaker 1 | Speaker 2 | Speaker 3 | unknown",
+      "role": "agent | customer | other | unknown",
+      "text": "short utterance text"
+    }
+  ],
+
   "timeline": [
     {
       "approx_time": "MM:SS or HH:MM:SS",
@@ -140,6 +149,11 @@ USER_PROMPT = (
     "- Assess customer satisfaction and confidence.\n"
     "- Provide a concise call summary.\n"
     "- Identify customer intent and key issues.\n"
+    "- When determining the customer's sentiment (both 'emotion_overall' and the customer's entry in 'speaker_sentiment'), explicitly factor in:\n"
+    "  - Call duration: estimate approximate duration from the audio. Longer calls with unresolved issues or rising tension skew negative; concise calls with clear resolution skew positive; otherwise neutral.\n"
+    "  - Vocabulary type: note politeness vs. hostility/profanity, hedging vs. assertiveness, emotional intensity, and technical/jargon usage. Hostile/profane or highly agitated language decreases sentiment; polite/appreciative language increases sentiment; jargon alone does not imply sentiment.\n"
+    "  - Number of questions the customer asked: count direct questions. Many repeated/clarification questions suggest confusion or concern and decrease sentiment/confidence; few questions with clear resolution may increase sentiment.\n"
+    "- Reflect these cues via short supporting quotes in 'key_quotes' and context in 'issues' when relevant. Do not add new fields to the schema.\n"
     "- THINK about which speaker is the agent; set 'agent_speaker_label' to the best guess and a confidence score.\n"
     "- Provide 'agent_improvement_opportunities' that focus on what the agent could do better next time, with evidence quotes and impact.\n"
     "- Identify 'objections' with severity and recommend improved responses.\n"
@@ -148,7 +162,7 @@ USER_PROMPT = (
     "- Capture 'customer_commitment' level with supporting quotes.\n"
     "- Determine 'outcome.resolution_status' and if follow-up is required.\n"
     "- Provide 'clarifying_questions_to_ask_next_time' and a short 'follow_up_message_draft'.\n"
-    "- Include compact 'key_quotes' and a minimal 'timeline' of turning points with approximate timestamps.\n"
+    "- Include compact 'key_quotes', a concise 'transcript' (10-40 ordered turns with speaker_label, role, approx_time, and short utterance text), and a minimal 'timeline' of turning points with approximate timestamps.\n"
     "- Keep lists concise (max 3-5 items) and avoid repetition.\n\n"
     "Output must STRICTLY match the JSON schema below. Do not include any text outside the JSON object. "
     "If information is not present, use empty string for strings, [] for arrays, and null where allowed.\n\n"

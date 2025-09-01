@@ -8,7 +8,7 @@
 </head>
 <body>
   <header class="app-header">
-    <h1>Voxtral Analysis</h1>
+    <h1>Customer Call Analysis (Voxtral)</h1>
     <div class="header-actions">
       <button id="toggleRawBtn" class="ghost" title="Show/Hide raw JSON">Raw JSON</button>
     </div>
@@ -22,11 +22,10 @@
           <span id="fileLabel">Choose audio file…</span>
         </label>
         <button id="analyzeBtn" class="primary" disabled>Analyze</button>
-        <button id="loadSampleBtn" class="secondary" title="Load the bundled sample analysis">Load sample</button>
       </div>
       <div class="control-row meta">
         <span id="status" class="status"></span>
-        <span id="backendHint" class="hint">Tip: If a backend is running at POST /api/analyze, the Analyze button will call it. Otherwise we'll load the sample output.</span>
+        <span id="duration" class="pill mono hidden"></span>
       </div>
     </section>
 
@@ -38,6 +37,7 @@
       <div id="intentIssues" class="card section"></div>
       <div id="actions" class="card section"></div>
       <div id="speakerSentiment" class="card section"></div>
+      <div id="transcript" class="card section"></div>
       <div id="wins" class="card section"></div>
       <div id="improvements" class="card section"></div>
       <div id="winBack" class="card section"></div>

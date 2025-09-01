@@ -1,129 +1,12 @@
 /**
  * Voxtral Frontend
  * - Upload audio
- * - Analyze (POST /api/analyze if available, else fall back to sample)
+ * - Analyze (POST /api/analyze)
  * - Render analysis result with actionable sections
  * - Auto-hide empty sections
  * - Quick navigation chips
  * - Raw JSON viewer and copy buttons
  */
-
-const sampleData = {
-  "emotion_overall": "neutral",
-  "emotion_confidence": 0.0,
-  "satisfaction": "neutral",
-  "satisfaction_confidence": 0.0,
-  "summary": "The agent is reaching out to schedule a call with a potential client to discuss AI and data analytics in the real estate industry, particularly in the Middle East and Dubai. The client is open to a 30-minute call but has a busy schedule, so they agree to meet on a specific date and time.",
-  "customer_intent": "The customer is interested in discussing AI and data analytics in the real estate industry, particularly in the Middle East and Dubai.",
-  "issues": [],
-  "action_items": [
-    {
-      "owner": "agent",
-      "item": "Schedule a 30-minute call with the client on Thursday, September 4th at 11:30 AM KSA time.",
-      "due": "2024-09-04"
-    }
-  ],
-  "agent_speaker_label": "Speaker 1",
-  "agent_identification_confidence": 0.9,
-  "agent_improvement_opportunities": [
-    {
-      "category": "discovery",
-      "observation": "The agent did not ask about the client's specific needs or pain points in the real estate industry.",
-      "evidence": "The agent did not ask any specific questions about the client's operations or challenges.",
-      "recommended_change": "Ask more open-ended questions to understand the client's specific needs and pain points.",
-      "impact": "medium"
-    }
-  ],
-  "what_worked": [
-    {
-      "category": "discovery",
-      "observation": "The agent was open to suggestions and willing to discuss the client's needs.",
-      "evidence": "The client mentioned that they are open to suggestions and willing to discuss.",
-      "impact": "medium"
-    }
-  ],
-  "what_didnt_work": [
-    {
-      "category": "discovery",
-      "observation": "The agent did not ask about the client's specific needs or pain points.",
-      "evidence": "The agent did not ask any specific questions about the client's operations or challenges.",
-      "recommended_fix": "Ask more open-ended questions to understand the client's specific needs and pain points.",
-      "impact": "medium"
-    }
-  ],
-  "win_back_strategy": {
-    "root_cause": "The client is interested in discussing AI and data analytics in the real estate industry.",
-    "messaging_pillars": [
-      "Highlight the client's specific needs and how AI can address them.",
-      "Showcase the agent's expertise in AI and data analytics.",
-      "Offer a free consultation or demo to demonstrate the value of their solutions."
-    ],
-    "sample_response": "We understand your interest in AI and data analytics for the real estate industry. Let's schedule a free consultation to discuss how our solutions can help you achieve your goals.",
-    "do": [
-      "Ask about the client's specific needs and pain points.",
-      "Highlight the agent's expertise and the value of their solutions."
-    ],
-    "avoid": [
-      "Avoid making assumptions about the client's needs.",
-      "Avoid using jargon that the client may not understand."
-    ]
-  },
-  "next_best_actions_ranked": [
-    {
-      "priority": 1,
-      "action": "Schedule a 30-minute call with the client on Thursday, September 4th at 11:30 AM KSA time.",
-      "owner": "agent",
-      "due": "2024-09-04",
-      "rationale": "This will allow the agent to discuss AI and data analytics in the real estate industry with the client."
-    }
-  ],
-  "objections": [],
-  "speaker_sentiment": [
-    {
-      "speaker_label": "Speaker 1",
-      "role": "agent",
-      "sentiment": "neutral",
-      "confidence": 0.9
-    },
-    {
-      "speaker_label": "Speaker 2",
-      "role": "customer",
-      "sentiment": "neutral",
-      "confidence": 0.8
-    }
-  ],
-  "knowledge_gaps": [],
-  "customer_commitment": {
-    "level": "soft",
-    "statements": ["The client is open to suggestions and willing to discuss."]
-  },
-  "outcome": {
-    "resolution_status": "partially_resolved",
-    "reason": "The client agreed to a call but did not express strong commitment.",
-    "follow_up_required": true
-  },
-  "clarifying_questions_to_ask_next_time": [
-    "What specific challenges are you facing in the real estate industry?",
-    "How do you envision AI and data analytics helping your business?"
-  ],
-  "post_call_recommendations": [
-    "Send a follow-up email to the client with a brief recap of the call and next steps.",
-    "Create a ticket in the CRM to track the client's interest and follow-up actions.",
-    "Schedule a follow-up call within a week to discuss the client's specific needs and how the agent's solutions can help."
-  ],
-  "follow_up_message_draft": "Hi [Client's Name], thank you for your time today. I look forward to discussing how our AI and data analytics solutions can help your real estate business. Let's schedule a follow-up call next week to dive deeper into your specific needs.",
-  "sentiment_analysis": "The conversation was neutral, with both parties expressing openness to discuss AI and data analytics in the real estate industry. However, the client did not express strong commitment, indicating a need for further engagement and understanding of their specific needs.",
-  "manager_coach_notes_top3": [
-    "Encourage the agent to ask more open-ended questions to understand the client's specific needs.",
-    "Highlight the agent's expertise and the value of their solutions during the call.",
-    "Follow up promptly after the call to ensure the client's interest is maintained."
-  ],
-  "agent_takeaways_top3": [
-    "Ask more open-ended questions to understand the client's specific needs and pain points.",
-    "Highlight the agent's expertise and the value of their solutions.",
-    "Follow up promptly after the call to ensure the client's interest is maintained."
-  ]
-};
 
 const API_BASE = "http://localhost:8002";
 
@@ -137,7 +20,9 @@ const el = (tag, opts = {}) => {
   if (opts.attrs) Object.entries(opts.attrs).forEach(([k, v]) => e.setAttribute(k, v));
   return e;
 };
-const clear = (node) => { node.innerHTML = ""; };
+const clear = (node) => {
+  node.innerHTML = "";
+};
 const show = (node, on) => node.classList.toggle("hidden", !on);
 const toPercent = (v) => (typeof v === "number" ? `${Math.round(v * 100)}%` : "");
 const sentimentClass = (s) => (s ? `sentiment-${String(s).toLowerCase().replace(/\s+/g, "_")}` : "");
@@ -164,6 +49,16 @@ const copyToClipboard = async (text) => {
 };
 const nonEmptyArray = (arr) => Array.isArray(arr) && arr.length > 0;
 
+const formatDuration = (totalSeconds) => {
+  if (typeof totalSeconds !== "number" || !isFinite(totalSeconds) || totalSeconds <= 0) return "";
+  const sec = Math.round(totalSeconds);
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  const pad = (n) => String(n).padStart(2, "0");
+  return h > 0 ? `${h}:${pad(m)}:${pad(s)}` : `${m}:${pad(s)}`;
+};
+
 // Global state
 let currentData = null;
 
@@ -181,7 +76,10 @@ function renderOverview(data) {
     !!data.agent_speaker_label ||
     typeof data.agent_identification_confidence === "number";
 
-  if (!hasOverview) { show(container, false); return false; }
+  if (!hasOverview) {
+    show(container, false);
+    return false;
+  }
 
   show(container, true);
   const title = el("div", { className: "section-title" });
@@ -227,7 +125,10 @@ function renderOverview(data) {
 function renderSummary(data) {
   const container = byId("summary");
   clear(container);
-  if (!data.summary) { show(container, false); return false; }
+  if (!data.summary) {
+    show(container, false);
+    return false;
+  }
   show(container, true);
 
   const title = el("div", { className: "section-title" });
@@ -244,7 +145,10 @@ function renderIntentIssues(data) {
   const container = byId("intentIssues");
   clear(container);
   const has = !!data.customer_intent || nonEmptyArray(data.issues);
-  if (!has) { show(container, false); return false; }
+  if (!has) {
+    show(container, false);
+    return false;
+  }
   show(container, true);
 
   const title = el("div", { className: "section-title" });
@@ -278,7 +182,10 @@ function renderActions(data) {
   const container = byId("actions");
   clear(container);
   const has = nonEmptyArray(data.action_items) || nonEmptyArray(data.next_best_actions_ranked);
-  if (!has) { show(container, false); return false; }
+  if (!has) {
+    show(container, false);
+    return false;
+  }
   show(container, true);
 
   const title = el("div", { className: "section-title" });
@@ -335,7 +242,10 @@ function renderSpeakerSentiment(data) {
   const container = byId("speakerSentiment");
   clear(container);
   const arr = data.speaker_sentiment;
-  if (!nonEmptyArray(arr)) { show(container, false); return false; }
+  if (!nonEmptyArray(arr)) {
+    show(container, false);
+    return false;
+  }
   show(container, true);
 
   const title = el("div", { className: "section-title" });
@@ -360,11 +270,50 @@ function renderSpeakerSentiment(data) {
   return true;
 }
 
+function renderTranscript(data) {
+  const container = byId("transcript");
+  clear(container);
+  const arr = data.transcript;
+  if (!nonEmptyArray(arr)) {
+    show(container, false);
+    return false;
+  }
+  show(container, true);
+
+  const title = el("div", { className: "section-title" });
+  title.appendChild(el("h2", { text: "Transcript" }));
+  container.appendChild(title);
+
+  const ul = el("ul", { className: "clean" });
+  arr.forEach((t) => {
+    const li = el("li");
+
+    const header = el("div", { className: "row" });
+    if (t.approx_time) header.appendChild(pill(t.approx_time, ["mono", "faded"]));
+    const who = [t.speaker_label || "unknown", t.role || "unknown"].filter(Boolean).join(" · ");
+    if (who) header.appendChild(pill(who, ["nowrap"]));
+    li.appendChild(header);
+
+    const body = el("div", { className: "li-sub" });
+    const p = el("p");
+    p.textContent = t.text || "";
+    body.appendChild(p);
+    li.appendChild(body);
+
+    ul.appendChild(li);
+  });
+  container.appendChild(ul);
+  return true;
+}
+
 function renderWins(data) {
   const container = byId("wins");
   clear(container);
   const arr = data.what_worked;
-  if (!nonEmptyArray(arr)) { show(container, false); return false; }
+  if (!nonEmptyArray(arr)) {
+    show(container, false);
+    return false;
+  }
   show(container, true);
 
   const title = el("div", { className: "section-title" });
@@ -400,7 +349,10 @@ function renderImprovements(data) {
   const didnt = data.what_didnt_work;
   const opps = data.agent_improvement_opportunities;
   const has = nonEmptyArray(didnt) || nonEmptyArray(opps);
-  if (!has) { show(container, false); return false; }
+  if (!has) {
+    show(container, false);
+    return false;
+  }
   show(container, true);
 
   const title = el("div", { className: "section-title" });
@@ -471,8 +423,16 @@ function renderWinBack(data) {
   const container = byId("winBack");
   clear(container);
   const wb = data.win_back_strategy || {};
-  const has = wb.root_cause || nonEmptyArray(wb.messaging_pillars) || nonEmptyArray(wb.do) || nonEmptyArray(wb.avoid) || wb.sample_response;
-  if (!has) { show(container, false); return false; }
+  const has =
+    wb.root_cause ||
+    nonEmptyArray(wb.messaging_pillars) ||
+    nonEmptyArray(wb.do) ||
+    nonEmptyArray(wb.avoid) ||
+    wb.sample_response;
+  if (!has) {
+    show(container, false);
+    return false;
+  }
   show(container, true);
 
   const title = el("div", { className: "section-title" });
@@ -548,7 +508,10 @@ function renderObjections(data) {
   const container = byId("objections");
   clear(container);
   const arr = data.objections;
-  if (!nonEmptyArray(arr)) { show(container, false); return false; }
+  if (!nonEmptyArray(arr)) {
+    show(container, false);
+    return false;
+  }
   show(container, true);
 
   const title = el("div", { className: "section-title" });
@@ -580,10 +543,19 @@ function renderObjections(data) {
 function renderCommitmentOutcome(data) {
   const container = byId("commitmentOutcome");
   clear(container);
-  const hasCommit = data.customer_commitment && (data.customer_commitment.level || nonEmptyArray(data.customer_commitment.statements));
-  const hasOutcome = data.outcome && (data.outcome.resolution_status || data.outcome.reason || typeof data.outcome.follow_up_required === "boolean");
+  const hasCommit =
+    data.customer_commitment &&
+    (data.customer_commitment.level || nonEmptyArray(data.customer_commitment.statements));
+  const hasOutcome =
+    data.outcome &&
+    (data.outcome.resolution_status ||
+      data.outcome.reason ||
+      typeof data.outcome.follow_up_required === "boolean");
   const has = hasCommit || hasOutcome;
-  if (!has) { show(container, false); return false; }
+  if (!has) {
+    show(container, false);
+    return false;
+  }
   show(container, true);
 
   const title = el("div", { className: "section-title" });
@@ -610,7 +582,8 @@ function renderCommitmentOutcome(data) {
     container.appendChild(el("div", { className: "section-subtitle", text: "Outcome" }));
     const row = el("div", { className: "row" });
     if (data.outcome.resolution_status) row.appendChild(pill(`Status: ${data.outcome.resolution_status}`));
-    if (typeof data.outcome.follow_up_required === "boolean") row.appendChild(pill(`Follow-up: ${data.outcome.follow_up_required ? "yes" : "no"}`));
+    if (typeof data.outcome.follow_up_required === "boolean")
+      row.appendChild(pill(`Follow-up: ${data.outcome.follow_up_required ? "yes" : "no"}`));
     container.appendChild(row);
     if (data.outcome.reason) {
       const p = el("p", { className: "faded" });
@@ -624,8 +597,14 @@ function renderCommitmentOutcome(data) {
 function renderRecommendations(data) {
   const container = byId("recommendations");
   clear(container);
-  const has = nonEmptyArray(data.clarifying_questions_to_ask_next_time) || nonEmptyArray(data.post_call_recommendations) || !!data.sentiment_analysis;
-  if (!has) { show(container, false); return false; }
+  const has =
+    nonEmptyArray(data.clarifying_questions_to_ask_next_time) ||
+    nonEmptyArray(data.post_call_recommendations) ||
+    !!data.sentiment_analysis;
+  if (!has) {
+    show(container, false);
+    return false;
+  }
   show(container, true);
 
   const title = el("div", { className: "section-title" });
@@ -667,7 +646,10 @@ function renderRecommendations(data) {
 function renderDrafts(data) {
   const container = byId("drafts");
   clear(container);
-  if (!data.follow_up_message_draft) { show(container, false); return false; }
+  if (!data.follow_up_message_draft) {
+    show(container, false);
+    return false;
+  }
   show(container, true);
 
   const title = el("div", { className: "section-title" });
@@ -696,7 +678,10 @@ function renderNotes(data) {
   const container = byId("notes");
   clear(container);
   const has = nonEmptyArray(data.manager_coach_notes_top3) || nonEmptyArray(data.agent_takeaways_top3);
-  if (!has) { show(container, false); return false; }
+  if (!has) {
+    show(container, false);
+    return false;
+  }
   show(container, true);
 
   const title = el("div", { className: "section-title" });
@@ -731,7 +716,10 @@ function renderKnowledge(data) {
   const container = byId("knowledgeGaps");
   clear(container);
   const arr = data.knowledge_gaps;
-  if (!nonEmptyArray(arr)) { show(container, false); return false; }
+  if (!nonEmptyArray(arr)) {
+    show(container, false);
+    return false;
+  }
   show(container, true);
 
   const title = el("div", { className: "section-title" });
@@ -763,6 +751,7 @@ function buildQuickNav() {
     ["intentIssues", "Intent & Issues"],
     ["actions", "Actions"],
     ["speakerSentiment", "Speakers"],
+    ["transcript", "Transcript"],
     ["wins", "Wins"],
     ["improvements", "Improvements"],
     ["winBack", "Win-back"],
@@ -797,6 +786,7 @@ function renderAll(data) {
     renderIntentIssues(currentData),
     renderActions(currentData),
     renderSpeakerSentiment(currentData),
+    renderTranscript(currentData),
     renderWins(currentData),
     renderImprovements(currentData),
     renderWinBack(currentData),
@@ -820,8 +810,7 @@ async function analyzeViaBackend(file) {
   const status = byId("status");
   const analyzeBtn = byId("analyzeBtn");
   try {
-
-    status.textContent = "Uploading and analyzing…";
+    status.textContent = "Uploading audio & starting analysis…";
     analyzeBtn.disabled = true;
 
     const fd = new FormData();
@@ -836,13 +825,14 @@ async function analyzeViaBackend(file) {
       throw new Error(`Backend responded ${resp.status}`);
     }
 
+    status.textContent = "Parsing response…";
     const data = await resp.json();
     status.textContent = "Analysis complete.";
-    return { ok: true, data, usedSample: false };
+    return { ok: true, data };
   } catch (err) {
-    console.warn("Analyze failed, using sample:", err);
-    status.textContent = "Backend not available — showing sample output.";
-    return { ok: true, data: sampleData, usedSample: true };
+    console.error("Analyze failed:", err);
+    status.textContent = `Analysis failed. Ensure backend is running at ${API_BASE}/api/analyze`;
+    return { ok: false, error: err?.message || String(err) };
   } finally {
     analyzeBtn.disabled = false;
   }
@@ -853,43 +843,67 @@ function init() {
   const audioInput = byId("audioInput");
   const fileLabel = byId("fileLabel");
   const analyzeBtn = byId("analyzeBtn");
-  const loadSampleBtn = byId("loadSampleBtn");
   const toggleRawBtn = byId("toggleRawBtn");
   const copyJsonBtn = byId("copyJsonBtn");
   const status = byId("status");
+  const durationEl = byId("duration");
 
-  status.textContent = "Target API: http://localhost:8002/api/analyze";
+  status.textContent = "Select an audio file to analyze.";
 
   audioInput.addEventListener("change", () => {
     const f = audioInput.files && audioInput.files[0];
     if (f) {
       fileLabel.textContent = f.name;
       analyzeBtn.disabled = false;
-      status.textContent = "";
+      status.textContent = "Reading audio metadata…";
+      // Try to compute duration client-side
+      try {
+        const audio = document.createElement("audio");
+        audio.preload = "metadata";
+        const url = URL.createObjectURL(f);
+        audio.src = url;
+        audio.onloadedmetadata = () => {
+          const formatted = formatDuration(audio.duration);
+          if (formatted) {
+            durationEl.textContent = `Duration: ${formatted}`;
+            show(durationEl, true);
+          } else {
+            durationEl.textContent = "";
+            show(durationEl, false);
+          }
+          URL.revokeObjectURL(url);
+          status.textContent = "Ready. Click Analyze to start.";
+        };
+        audio.onerror = () => {
+          show(durationEl, false);
+          status.textContent = "Ready. Click Analyze to start.";
+        };
+      } catch {
+        show(durationEl, false);
+        status.textContent = "Ready. Click Analyze to start.";
+      }
     } else {
       fileLabel.textContent = "Choose audio file…";
       analyzeBtn.disabled = true;
+      status.textContent = "Select an audio file to analyze.";
+      show(durationEl, false);
     }
   });
 
   analyzeBtn.addEventListener("click", async () => {
     const f = audioInput.files && audioInput.files[0];
     if (!f) return;
-    status.textContent = "Analyzing…";
+    status.textContent = "Preparing request…";
     analyzeBtn.disabled = true;
     const res = await analyzeViaBackend(f);
     if (res.ok) {
+      status.textContent = "Rendering results…";
       renderAll(res.data);
-      status.textContent = res.usedSample ? "Showing sample output." : "Analysis complete.";
+      status.textContent = "Done.";
     } else {
-      status.textContent = "Analysis failed.";
+      // status is already set in analyzeViaBackend on failure
     }
     analyzeBtn.disabled = false;
-  });
-
-  loadSampleBtn.addEventListener("click", () => {
-    renderAll(sampleData);
-    status.textContent = "Loaded sample output.";
   });
 
   toggleRawBtn.addEventListener("click", () => {
@@ -908,9 +922,6 @@ function init() {
       setTimeout(() => (copyJsonBtn.textContent = "Copy JSON"), 1200);
     });
   }
-
-  // Optional: preload sample to showcase UI
-  // renderAll(sampleData);
 }
 
 document.addEventListener("DOMContentLoaded", init);
